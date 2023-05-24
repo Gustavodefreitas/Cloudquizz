@@ -1,0 +1,69 @@
+image: node:latest
+
+before_script:
+  - npm i -g firebase-tools@11.18.0
+
+stages:
+  - build
+  - deploy
+
+build-production:
+  stage: build
+  script:
+    - npm ci --progress=false --legacy-peer-deps
+    - export NODE_OPTIONS=--openssl-legacy-provider
+    - npm run build
+  artifacts:
+    paths:
+      - dist/
+  only:
+    - master
+
+build-develop:
+  stage: build
+  script:
+    - npm ci --progress=false --legacy-peer-deps
+    - export NODE_OPTIONS=--openssl-legacy-provider
+    - npm run build:dev
+  artifacts:
+    paths:
+      - dist/
+  only:
+    - develop
+
+build-branch:
+  stage: build
+  script:
+    - npm ci --progress=false --legacy-peer-deps
+    - export NODE_OPTIONS=--openssl-legacy-provider
+    - npm run build:dev
+  artifacts:
+    paths:
+      - dist/
+  except:
+    - develop
+    - master
+
+deploy-production:
+  stage: deploy
+  script:
+    - firebase use default
+    - firebase deploy -m "Pipeline $CI_PIPELINE_ID | Build $CI_BUILD_ID" --non-interactive --only hosting --token $FIREBASE_TOKEN
+  only:
+    - master
+
+deploy-develop:
+  stage: deploy
+  script:
+    - firebase use develop
+    - firebase deploy -m "Pipeline $CI_PIPELINE_ID | Build $CI_BUILD_ID" --non-interactive --only hosting --token $FIREBASE_TOKEN
+  only:
+    - develop
+
+deploy-branch:
+  stage: deploy
+  script:
+    - echo "Deploy not available for this branch."
+  except:
+    - develop
+    - master

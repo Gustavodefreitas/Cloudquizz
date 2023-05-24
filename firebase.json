@@ -1,0 +1,77 @@
+{
+  "hosting": {
+    "public": "dist",
+    "rewrites": [
+        {
+          "source": "**",
+          "destination": "/index.html"
+        }
+    ],
+    "ignore": [
+      "firebase.json",
+      "**/.*",
+      "**/node_modules/**"
+    ],
+    "headers": [
+        {
+            "source" : "**/*.@(eot|otf|ttf|ttc|woff|woff2|font.css)",
+            "headers" : [ {
+                "key" : "Access-Control-Allow-Origin",
+                "value" : "*"
+            }, {
+                "key": "Cache-Control",
+                "value" : "max-age=30672000"
+            } ]
+        }, {
+            "source" : "**/*.@(js|css)",
+            "headers" : [ {
+              "key" : "Cache-Control",
+              "value" : "max-age=30672000"
+            } ]
+        }, {
+            "source" : "**/*.@(jpg|jpeg|gif|png)",
+            "headers" : [ {
+              "key" : "Cache-Control",
+              "value" : "max-age=30672000"
+            } ]
+        }, {
+            "source" : "404.html",
+            "headers" : [ {
+              "key" : "Cache-Control",
+              "value" : "max-age=300"
+            } ]
+        }
+    ]
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  },
+  "storage": {
+    "rules": "storage.rules"
+  },
+  "functions": {
+    "source": "functions"
+  },
+  "emulators": {
+    "auth": {
+      "port": 9099
+    },
+    "functions": {
+      "port": 5001
+    },
+    "firestore": {
+      "port": 8000
+    },
+    "hosting": {
+      "port": 5000
+    },
+    "pubsub": {
+      "port": 8085
+    },
+    "ui": {
+      "enabled": true,
+      "port": 4000
+    }
+  }
+}
