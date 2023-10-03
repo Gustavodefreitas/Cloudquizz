@@ -425,6 +425,7 @@ import { analytics } from '../../api/firebase'
 import Paginator from '../Paginator'
 import VueTextEditor from '../Shared/VueTextEditor.vue'
 import { Entity } from '../../entities/base.entity'
+import { QuestionEntity } from '../../entities/question.entity'
 
 export default {
   directives: { Ripple },
@@ -756,7 +757,7 @@ export default {
       if (!this.$refs.formRef.validate()) {
         return
       }
-
+      console.log('create')
       this.$store.commit('setLoading', true)
 
       const exist = await this.$store.dispatch('testExists', this.title)
@@ -766,6 +767,12 @@ export default {
         return
       }
 
+
+      if (this.testType === 'selected'){
+        this.selectedQuestions.forEach(element => {
+          this.testItems.push(element)
+        })
+      }
       if (this.testType === 'random') {
         this.selectedQuestions = []
 
@@ -780,21 +787,46 @@ export default {
         await Promise.all(promises)
       }
 
-      if (this.testType !== 'auto') {
-        this.selectedQuestions.forEach(element => {
-          this.testItems.push(element)
-        })
-      }
 
       const testData = {
         title: this.title,
         instructions: this.instructions,
         approvalPercentage: this.approvalPercentage,
-        questions: this.testItems,
+        questions: this.testItems.map((el) => {
+          return {
+            level:{
+            index: el.level.index,
+              name: el.level.name
+            },
+            answers: el.answers.map((ans) => {
+            return {
+              ansId: ans.ansId,
+              description: ans.description,
+              text: ans.text,
+              value: ans.value,
+            }
+          }),
+            id:el.id,
+            created: el.created,
+            updated: el.updated,
+            toDelete: el.toDelete,
+            answerJustification: el.answerJustification,
+            answerJustificationSource: el.answerJustificationSource,
+            image: el.image,
+            imageSize: el.imageSize,
+            multipleAnswers: el.multipleAnswers,
+            name: el.name,
+            question: el.question,
+            subject: el.subject
+          }
+        }),
         questionsNames: this.testItems.map(q => q.name),
         questionsAmount: this.testItems.length || +this.randomQuestionsNumber,
         type: this.testType,
-        level: this.level,
+        level:{
+            index: this.level.index,
+            name: this.level.name
+            },
         unlimitedTime: this.unlimitedTime,
         time: {
           hours: +this.time.hours,
@@ -804,6 +836,7 @@ export default {
         userId: this.$store.getters.user.id,
       }
 
+      console.log(testData)
       if (this.testType === 'auto') {
         testData.subjects = [...this.testSubjects]
 

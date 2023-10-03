@@ -176,7 +176,6 @@ export class TestController extends Controller {
       TestEntity,
       query,
     )
-
     const tests = await this._setUsers(data)
 
     return { ...rest, data: tests }

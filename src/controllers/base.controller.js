@@ -145,8 +145,6 @@ export class Controller {
       }
     }
 
-    query = query.orderBy(orderBy)
-
     let start = lastDoc ? lastDoc[0] : null
     let end = lastDoc ? lastDoc[1] : null
 
@@ -159,9 +157,11 @@ export class Controller {
     } else {
       if (start) {
         query = query.endBefore(start)
+
       }
 
       query = query.limitToLast(itemsPerPage)
+
     }
 
     const snap = await query.get()
@@ -192,11 +192,9 @@ export class Controller {
     if (data.id) {
       delete clone.id
     }
-
     const entity = new entityType(clone)
 
-    const doc = await db.collection(collection).add(entity.toMap())
-
+    const doc = await db.collection(collection).add(collection === 'tests'?clone:entity.toMap())
     return entityType.fromMap({ ...entity.toMap(), id: doc.id })
   }
 

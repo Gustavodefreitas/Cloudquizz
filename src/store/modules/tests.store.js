@@ -477,7 +477,7 @@ const actions = {
     }
 
     try {
-      await dispatch('deleteTests')
+      // await dispatch('deleteTests')
 
       if (pages.includes(`p${page}`)) {
         const pageContent = state.tests[`p${page}`]
@@ -498,7 +498,6 @@ const actions = {
         lastDoc: mode ? null : state.lastTestDocument,
         orderBy: 'uuid',
       })
-
       commit('setCurrentTestsPage', data)
       commit('setTestPage', { page: `p${page}`, data })
 
@@ -863,7 +862,6 @@ const actions = {
 
     try {
       const tests = await controller.getLast(payload.limit)
-
       commit('setLastTests', tests)
     } catch (error) {
       const errorModel = showErrorMessage('load', 'Quizzes', error.message)
