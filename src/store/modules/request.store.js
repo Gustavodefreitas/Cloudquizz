@@ -26,7 +26,7 @@ import { RequestController } from '../../controllers/request.controller'
  * @property {RequestEntity[]} lastPendentRequests - An array of the most recent pending tests.
  * @property {RequestEntity[]} currentUserRequests - An array of the current user last pending requests.
  * @property {RequestEntity[]} otherUserRequests - An array of other users last pending requests.
- */
+ * @property {any[]} answerUsers
 
 /**
  * Defines the request controller.
@@ -47,6 +47,7 @@ const initialState = () => ({
   lastPendentRequests: [],
   currentUserRequests: [],
   otherUserRequests: [],
+  answerUsers:[],
 })
 
 const state = initialState()
@@ -125,6 +126,7 @@ const mutations = {
   setOtherUserRequests(state, data) {
     state.otherUserRequests = data.map(r => r.clone())
   },
+
   /**
    * Adds a request to the array of requests marked to be deleted.
    *
@@ -1015,6 +1017,22 @@ const getters = {
    * @param {RequestState} state The request state.
    * @returns {RequestEntity[]} An array of requests.
    */
+
+  async setUsersAnswers(state){
+   const data = await controller.getAll()
+   data.then((response) => {
+    state.answerUsers = response
+    console.log(response)
+
+        return response 
+   })
+
+   return data
+  },
+  getUsersAnswers(state){
+    return state.answerUsers
+  },
+
   getLastPendentRequests(state) {
     return state.lastPendentRequests
   },

@@ -59,6 +59,16 @@ export class RequestController extends Controller {
    * @param {string} id the request id.
    * @returns the found request.
    */
+
+  async getAll(){
+    const entity = await super._getAllUsersAnswers('',{})
+
+    if (!entity) {
+      return null
+    }
+
+    return entity
+  }
   async getOne(id) {
     const entity = await super._getOne(REQUEST_COLLECTION, RequestEntity, id)
 
@@ -462,6 +472,13 @@ export class RequestController extends Controller {
     for (const request of list) {
       request.user = await userController.getOne(request.userId)
     }
+
+    return list
+  }
+
+  async _setUsersAnswers(requests = []) {
+    const list = [...requests]
+    console.log(list)
 
     return list
   }

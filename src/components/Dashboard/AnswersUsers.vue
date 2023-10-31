@@ -1,8 +1,8 @@
 <template>
-  <v-card outlined width="100%" height="100%" class="pendent-request">
+  <v-card outlined width="100%" height="100%" class="tests-table">
     <v-data-table
       hide-default-footer
-      class="dashboard-pendent-request"
+      class="dashboard-tests-table"
       height="100%"
       style="height: calc(100% - 52px) !important;"
       :loading-text="$t('TEST.loading_quizzes')"
@@ -10,7 +10,7 @@
       :headers="
         headers.map(h => ({
           ...h,
-          text: $t('DASHBOARD.TESTS_TABLE.HEADERS.' + h.text),
+          text: h.text,
         }))
       "
       :items="tests"
@@ -21,7 +21,7 @@
       <template v-slot:top>
         <v-toolbar dense flat color="white" class="mt-1">
           <h1 class="table-title">
-            {{ $t('DASHBOARD.TESTS_TABLE.recent_quizzes')}}
+            Answered quizzes
           </h1>
         </v-toolbar>
 
@@ -73,9 +73,33 @@
         </span>
       </template>
 
-      <template v-slot:[`item.updated`]="{ item }">
-        {{ formatDate(item.updated) }}
+      <template v-slot:[`item.date`]="{ item }">
+        {{ item.date }}
       </template>
+
+      <template v-slot:[`item.approve`]="{ item }">
+        <div class="type-container">
+          <div
+            class="icon-container"
+           
+          >
+           
+
+            <v-icon size="20" :color="getItemIconColorApprove(item)">
+              {{ mdiCheckboxMultipleMarked }}
+            </v-icon>
+          </div>
+
+          <span class="type-text" >
+            {{ (item.approve?'Aprovado':'Reprovado') }}
+          </span>
+        </div>
+      </template>
+      <template v-slot:[`item.review`]="{ item }">
+      <v-btn text small color="blue" @click="reviewAttempt(item)">
+        {{ $t('TEST.ATTEMPTS.HEADERS.review') }}
+      </v-btn>
+    </template>
     </v-data-table>
   </v-card>
 </template>
@@ -87,16 +111,78 @@ import {
   mdiArrowDecisionAutoOutline,
   mdiDumbbell,
 } from '@mdi/js'
+import { db, storage,analytics } from '../../api/firebase'
 
-import { analytics } from '../../api/firebase'
 
 export default {
-  name: 'TestsTable',
+  name: 'AnswersUsers',
+  mounted(){
+    const collectionRef = db.collection('answersUsers')
+    collectionRef.get()
+    .then((querySnapshot) => {
+      const documentos = [];
+      querySnapshot.forEach((doc) => {
+        documentos.push(doc.data());
+      });
+      this.tests = documentos.map((el) => {
+        const q = el.quiz
+        let total = 0
+        let correct = 0
+        let approve = false
+        return {
+          answers: el.answers.map((a) => {
+            return {
+              answers:a.answers.map((f) => {
+                total = total + 1
+                if(f.value){
+                  correct = correct + 1
+                }
+                return {
+                  ansId:f.ansId,
+                  text:f.text,
+                  value:f.value
+                }
+              }),
+              question:a.question
+            }
+          }),
+            date: el.date.split('-')[2].substring(0,2)+'/'+el.date.split('-')[1]+'/'+el.date.split('-')[0],
+            approve:(correct / total) * 100 >= q.approvalPercentage ? true : false,
+            approvalPercentage: q.approvalPercentage,
+            created: q.created,
+            instructions: q.instructions,
+            level: q.level,
+            query: q.query,
+            questions: q.questions,
+            questionsAmount: q.questionsAmount,
+            questionsNames: q.questionsNames,
+            subjects: q.subjects,
+            time: q.time,
+            title: q.title,
+            toDelete: q.toDelete,
+            type: q.type,
+            unlimitedTime: q.unlimitedTime,
+            updated: q.updated,
+            userAttempts: q.userAttempts,
+            userId: q.userId,
+            uuid: q.uuid,
+            userNome:el.user.nome,
+            userEmail:el.user.email
+
+          
+        }
+      });
+
+    })
+    .catch((error) => {
+      console.error('Erro ao buscar documentos:', error);
+    });
+  },
   data() {
     return {
       headers: [
-        { text: 'title', sortable: false, value: 'title', align: 'center' },
-        { text: 'type', sortable: false, value: 'type', align: 'center' },
+        { text: 'User', sortable: false, value: 'userNome', align: 'center' },
+        { text: 'Title', sortable: false, value: 'title', align: 'center' },
         {
           text: 'questions_amount',
           sortable: false,
@@ -107,20 +193,32 @@ export default {
         {
           text: 'last_update',
           sortable: false,
-          value: 'updated',
+          value: 'date',
+          align: 'center',
+        },
+        {
+          text: 'result',
+          sortable: false,
+          value: 'approve',
+          align: 'center',
+        },
+        {
+          text: 'review',
+          sortable: false,
+          value: 'review',
           align: 'center',
         },
       ],
+      
       mdiCheckboxMultipleMarked,
       mdiShuffleVariant,
       mdiArrowDecisionAutoOutline,
       mdiDumbbell,
+      tests:[]
     }
   },
   computed: {
-    tests() {
-      return this.$store.getters.getLastTests
-    },
+    
     loading() {
       return this.$store.getters.loading
     },
@@ -137,6 +235,14 @@ export default {
     },
   },
   methods: {
+    reviewAttempt(item) {
+      const id = item.id
+      console.log(item)
+      this.$router.push({
+        name: 'quiz.exam',
+        params: { id:'new', mode: 'practice', attempt: item, review: true },
+      })
+    },
     getLevel(item) {
       const level = item.level.index
 
@@ -162,6 +268,14 @@ export default {
             color: 'red',
           }
       }
+    },
+    getItemIconColorApprove(item) {
+      if (item.approve) {
+          return 'green'
+      } else {
+        return 'red'
+      }
+      return item.type === 'random' ? '#2196F3' : '#6755FA'
     },
     getItemIconColor(item) {
       if (item.toDelete) {
@@ -246,7 +360,7 @@ export default {
   animation: animate-icon 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
-.pendent-request {
+.tests-table {
   border-radius: 26px;
   overflow: hidden;
 }
@@ -281,18 +395,18 @@ export default {
 </style>
 
 <style>
-.dashboard-pendent-request .item-to-delete {
+.dashboard-tests-table .item-to-delete {
   color: #f00;
   background-color: white !important;
 }
 
-.dashboard-pendent-request .item-deleted {
+.dashboard-tests-table .item-deleted {
   color: #c4c4c4;
   background-color: white !important;
 }
 
-.dashboard-pendent-request .item-active.admin,
-.dashboard-pendent-request .item-active.student {
+.dashboard-tests-table .item-active.admin,
+.dashboard-tests-table .item-active.student {
   cursor: pointer !important;
 }
 </style>

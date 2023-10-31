@@ -72,6 +72,12 @@ export class Controller {
     )
   }
 
+  async _getAllUsersAnswers(collection, entityType) {
+    const snap = await db.collection('answersUsers').get()
+
+    return snap.docs.map((doc) => doc.data()).toList();
+  }
+
   /**
    * Gets an entity according to the given collection and id.
    *

@@ -7,12 +7,16 @@
       v-else-if="userClaims && userClaims['appraiser']"
       :windowWidth="windowWidth"
     />
+    
     <QuestionBySubject :windowWidth="windowWidth" />
     <TestsByWeek :windowWidth="windowWidth" />
-    <PendentRequests
+    <AnswersUsers 
+    v-if="userClaims && !userClaims['student']"
+    :windowWidth="windowWidth"/>
+    <!-- <PendentRequests
       v-if="userClaims && !userClaims['student']"
       :windowWidth="windowWidth"
-    />
+    /> -->
     <TestsTable :windowWidth="windowWidth" />
   </div>
 </template>
@@ -26,6 +30,7 @@ import QuestionBySubject from "./QuestionBySubject";
 import TestsByWeek from "./TestsByWeek";
 import PendentRequests from "./PendentRequests";
 import TestsTable from "./TestsTable";
+import AnswersUsers from "./AnswersUsers"
 
 export default {
   name: "Dashboard",
@@ -37,7 +42,8 @@ export default {
     QuestionBySubject,
     TestsByWeek,
     PendentRequests,
-    TestsTable
+    TestsTable,
+    AnswersUsers
   },
   data() {
     return {
@@ -132,6 +138,10 @@ export default {
 
 .dashboard .pendent-requests {
   grid-area: pendent-requests;
+}
+
+.dashboard .answers-users {
+  grid-area:
 }
 
 .dashboard .tests-table {

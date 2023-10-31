@@ -809,10 +809,14 @@ export default {
     },
     async selectReviewQuestions() {
       const questions = []
-
       for (const q of this.attempt.questions) {
         const question = await this.$store.dispatch('getQuestionByName', q)
-        questions.push(question)
+        if(!question){
+          questions.push(q)
+        } else {
+          questions.push(question)
+
+        }
       }
 
       this.examQuestions = questions
@@ -827,11 +831,19 @@ export default {
       )
 
       if (!answer) {
-        this.currentMultiAnswer = []
-        this.currentAnswer = null
-
-        return
-      }
+          this.currentMultiAnswer = []
+          this.currentAnswer = null
+          const answerNew = this.attempt.answers.find((el) => {
+            return this.examQuestions[0].question === el.question
+         })
+         if(this.examQuestions[0].multipleAnswers){
+          this.currentMultiAnswer = answerNew.answers.map(a => a.ansId)
+         } else {
+          this.currentAnswer = answerNew.answers[0]?answerNew.answers[0].ansId:''
+         }
+        
+          return
+        }
 
       if (this.examQuestions[this.current - 1].multipleAnswers) {
         this.currentMultiAnswer = answer.answer.map(a => `radio-${a}`)
@@ -847,7 +859,6 @@ export default {
       const randomQuestions = []
 
       let i = 0
-
       while (i < questions.length) {
         const rand = Math.floor(Math.random() * questions.length)
 
@@ -881,7 +892,8 @@ export default {
     },
   },
   async mounted() {
-    this.onResize()
+    // this.onResize()
+    console.log('aaaaa',this.$route.params)
     window.addEventListener('resize', this.onResize, { passive: true })
 
     this.loadingQuiz = true
@@ -891,6 +903,8 @@ export default {
 
     this.review = !!this.$route.params.review
     this.attempt = this.$route.params.attempt
+    
+  
 
     if (!mode) {
       this.$router.push('/quizzes/' + id)
@@ -901,12 +915,17 @@ export default {
     if (id === 'generated') {
       this.test = this.$route.params.test
     } else {
-      this.test = await this.$store.dispatch('getTestById', id)
+      if(id !== 'new'){
+        this.test = await this.$store.dispatch('getTestById', id)
+      } else {
+        this.test = this.attempt
+      }
     }
 
-    if (id !== 'generated' && this.review) {
-      await this.selectReviewQuestions()
 
+    if (id !== 'generated' && this.review) {
+
+      await this.selectReviewQuestions()
       this.loadingQuiz = false
       return
     }
@@ -917,7 +936,6 @@ export default {
       this.loadingQuiz = false
       return
     }
-
     this.randomizeQuestions([...this.test.questions])
 
     this.loadingQuiz = false
@@ -930,16 +948,24 @@ export default {
     },
     current(value) {
       const questionName = this.examQuestions[value - 1].name
-
       if (this.review && this.attempt) {
         const answer = this.attempt.answers.find(
           a => a.questionName === questionName,
         )
-
+        
+        
         if (!answer) {
           this.currentMultiAnswer = []
           this.currentAnswer = null
-
+          const answerNew = this.attempt.answers.find((el) => {
+            return this.examQuestions[value - 1].question === el.question
+         })
+         if(this.examQuestions[this.current - 1].multipleAnswers){
+          this.currentMultiAnswer = answerNew.answers.map(a => a.ansId)
+         } else {
+          this.currentAnswer = answerNew.answers[0].ansId
+         }
+        
           return
         }
 
@@ -952,7 +978,7 @@ export default {
 
         this.currentMultiAnswer = []
         this.currentAnswer = 'radio-' + answer.answer
-
+        console.log(currentAnswer)
         return
       }
 
